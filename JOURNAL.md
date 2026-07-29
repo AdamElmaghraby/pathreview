@@ -22,12 +22,22 @@ and core services (add a webhook service to handle delivery and retries).
 
 ## Week 8 — Reproduction & solution planning
 
-**Summary (short):**
-During this week I reproduced the missing-user-notification behavior and began preparing the webhook implementation. I added a unit test that pre-defines the webhook call by patching `send_review_ready_notification` as an `AsyncMock` and updated `test_review_service.py` to assert the notification is awaited once when a review completes. This test will drive the upcoming implementation of the webhook delivery logic and the accompanying API changes.
-
-**Reproduction commit link:** [link to commit documenting the reproduced issue]
+**Reproduction commit link:** https://github.com/AdamElmaghraby/pathreview/commit/0eca64edef216e7c30c2ebe84c4ceb3e843ce2e4
 
 **Reproduction summary:**
-Reproduced by running the review processing path with mocked pipeline steps; observed that `process_review` completed the review but there was no notification call implemented.
+I wrote a failing unit test (`test_process_review_notifies_user_when_complete` in
+`tests/unit/test_review_service.py`) that drives `process_review` all the way to
+its success path — the captured logs show `review_processing_completed` — and then
+asserts a notification collaborator was awaited. It fails with *"Awaited 0 times,"*
+confirming that a review can finish successfully while the user is never notified.
+The only existing way to learn a review is ready is to poll `GET /{review_id}/status`.
 
-**PLAN.md link:** [link to PLAN.md in your fork]
+**PLAN.md link:** [PLAN.md](https://github.com/AdamElmaghraby/pathreview/blob/feat/87-ready-for-review-webhook/PLAN.md)
+
+**Walkthrough video (recommended):** <!-- optional: paste your Loom link here, or leave blank -->
+
+**Blockers or open questions:**
+- Should a `failed` review also fire a webhook, or only a `complete` one?
+- Where should webhook subscription URLs and delivery state (`notified_at`,
+  attempt count) be stored — on `Review` or a separate table?
+- Which async HTTP client does the project already depend on for outbound POSTs?

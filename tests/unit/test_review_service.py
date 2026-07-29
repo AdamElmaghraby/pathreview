@@ -350,9 +350,9 @@ class TestReviewService:
         # ARRANGE — make the DB hand back a review, then a profile (process_review queries both)
         fake_review = Mock()
         fake_profile = Mock()
-        first_call = AsyncMock()
+        first_call = Mock()
         first_call.scalars.return_value.first.return_value = fake_review
-        second_call = AsyncMock()
+        second_call = Mock()
         second_call.scalars.return_value.first.return_value = fake_profile
         # execute() is called several times; return review first, profile second, then profile again
         mock_db_session.execute = AsyncMock(
