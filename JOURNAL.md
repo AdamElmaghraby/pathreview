@@ -22,7 +22,7 @@ and core services (add a webhook service to handle delivery and retries).
 
 ## Week 8 — Reproduction & solution planning
 
-**Reproduction commit link:** https://github.com/AdamElmaghraby/pathreview/commit/0eca64edef216e7c30c2ebe84c4ceb3e843ce2e4
+**Reproduction commit link:** https://github.com/AdamElmaghraby/pathreview/commit/4e08d1b4626ce7c6e1300954094e5ee44338745b
 
 **Reproduction summary:**
 I wrote a failing unit test (`test_process_review_notifies_user_when_complete` in
