@@ -1,13 +1,15 @@
-from uuid import UUID
-import structlog
 import json
 from datetime import datetime
-from sqlalchemy import select, and_
+from uuid import UUID
 
-from core.models.review import Review
-from core.models.profile import Profile
-from core.models.ingested_source import IngestedSource
+import structlog
+from sqlalchemy import and_, select
+
 from api.schemas.review import FeedbackSection
+from core.models.ingested_source import IngestedSource
+from core.models.profile import Profile
+from core.models.review import Review
+from core.services.webhook_service import send_review_ready_notification
 
 log = structlog.get_logger()
 
@@ -40,8 +42,8 @@ async def get_review(
     """
     Get a review by ID, checking that it belongs to the user's profile.
     """
-    stmt = select(Review).join(Profile).where(
-        and_(Review.id == review_id, Profile.user_id == user_id)
+    stmt = (
+        select(Review).join(Profile).where(and_(Review.id == review_id, Profile.user_id == user_id))
     )
     result = await db.execute(stmt)
     return result.scalars().first()
@@ -94,7 +96,12 @@ async def process_review(
     5. Run safety checks on output
     6. Set status="complete", store sections in review.sections
     7. On exception: set status="failed", log error
+    8. On any terminal state (complete/failed): notify the profile's webhook
     """
+    # Captured once the profile is loaded so every terminal path (including the
+    # exception handler) can notify without re-querying. None = no webhook / not
+    # yet loaded, which send_review_ready_notification treats as "skip".
+    webhook_url: str | None = None
     try:
         # Get the review
         stmt = select(Review).where(Review.id == review_id)
@@ -116,6 +123,9 @@ async def process_review(
             db.add(review)
             await db.commit()
             return
+
+        # Capture the webhook URL now that the profile is loaded.
+        webhook_url = profile.webhook_url
 
         # Step 1: Set status to processing
         review.status = "processing"
@@ -151,6 +161,7 @@ async def process_review(
             review.status = "failed"
             db.add(review)
             await db.commit()
+            await send_review_ready_notification(webhook_url, review)
             return
 
         # Step 6: Set status to complete and store sections
@@ -179,6 +190,9 @@ async def process_review(
             overall_score=review.overall_score,
         )
 
+        # Notify the user's webhook that their review is ready.
+        await send_review_ready_notification(webhook_url, review)
+
     except Exception as exc:
         log.error("review_processing_failed", review_id=str(review_id), error=str(exc))
         try:
@@ -190,6 +204,7 @@ async def process_review(
                 review.updated_at = datetime.utcnow()
                 db.add(review)
                 await db.commit()
+                await send_review_ready_notification(webhook_url, review)
         except Exception as e:
             log.error("review_status_update_failed", review_id=str(review_id), error=str(e))
 
