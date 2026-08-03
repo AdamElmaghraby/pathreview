@@ -67,7 +67,7 @@ all terminal paths of `process_review`, and documentation.
 
 ### Submission check-in
 
-**PR link:** <!-- TODO: filled in after the PR is opened -->
+**PR link:** https://github.com/AdamElmaghraby/pathreview/pull/1
 
 **What I built:** An outbound webhook that notifies a profile's `webhook_url`
 when a review reaches a terminal state. My Week 8 reproduction test now passes,
