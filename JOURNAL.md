@@ -93,3 +93,64 @@ cleaned only the files this PR touches.
 **Follow-ups (out of scope):** HMAC payload signing so receivers can verify the
 sender; delivery bookkeeping (`notified_at`, attempt count); a dedicated
 subscription table if multiple subscribers per profile are ever needed.
+
+## Week 10 — Iteration & reflection
+
+### Reviewer feedback
+
+**Feedback received:** [ ] Yes  [x] No — still awaiting review
+
+**Summary of feedback:**
+No reviewer feedback came in (per the Summer 2026 note, reviewer feedback isn't
+provided this term). My PR (#1) is open with no comments or reviews as of
+submission.
+
+**How you responded:**
+N/A — no feedback to respond to.
+
+---
+
+### Reflection
+
+**What was harder than you expected?**
+Working in what felt like a real production environment, not a clean tutorial
+repo. The codebase already had a lot of bugs and broken CI before I wrote a
+single line — around 182 ruff errors, ~51 unformatted files, and 53 failing unit
+tests. The hardest part wasn't writing my feature; it was figuring out which
+failures were *mine* and which were pre-existing. Early on I hit a confusing
+`'coroutine' object has no attribute 'first'` error and had to learn it was a
+Python 3.14-vs-CI-3.11 mismatch, not something I broke. Separating my own
+responsibility from the repo's existing mess was a skill I didn't expect to need.
+
+**What did you learn about working in a large codebase?**
+Not to reinvent the wheel. Instead of inventing my own approach, the move was to
+copy an existing pattern — I mirrored the `portfolio_url` field everywhere to add
+`webhook_url`, which made my change predictable and easy to review. I also had to
+follow conventions I didn't set: Conventional Commits with a scope, the Alembic
+migration chain, writing an ADR to document *why*, and matching the project's
+docstring/test style. Contributing to someone else's production code is less
+about clever code and more about fitting in with how the project already works.
+
+**How did AI tools help — and where did they fall short?**
+AI was most useful for implementing — tracing an unfamiliar codebase quickly,
+explaining testing and mocking, and scaffolding the service. Where it fell short
+was wide-scope context and judgment: it couldn't make the decisions that were
+actually mine to make — where to store the webhook URL, whether to notify on
+`failed` as well as `complete`, whether to retry on `4xx`, and how ambitiously to
+scope the PR. Those came down to my own judgment, and AI could lay out
+trade-offs but not decide for me.
+
+**What would you do differently if you started over?**
+I'd pick a lower-tier issue. I chose a Tier-3 webhook system, and I ended up
+spending most of my time learning testing and implementation details rather than
+learning the thing this module was really about — how to contribute to a
+production open-source project. A smaller issue would have let me spend more of
+my energy on the contribution workflow (reviewing conventions, scoping, PR
+hygiene) instead of on the mechanics of building the feature.
+
+**What are you most proud of?**
+I now actually understand how contributing works in a real engineering
+environment — branching and PR conventions, writing tests and docs to a
+project's standard, scoping a change so it stays reviewable, and being honest in
+the PR about what does and doesn't pass CI instead of pretending everything is
+green. That understanding is worth more to me than the feature itself.
