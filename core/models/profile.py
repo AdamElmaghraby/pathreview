@@ -31,6 +31,8 @@ class Profile(Base):
     resume_filename: Mapped[str | None] = mapped_column(String(255), nullable=True)
     resume_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     portfolio_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    webhook_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=datetime.utcnow
     )

@@ -1,11 +1,12 @@
 from uuid import UUID
+
 import structlog
 from sqlalchemy import select
 
+from api.schemas.profile import ProfileCreate, ProfileUpdate
+from core.models.ingested_source import IngestedSource
 from core.models.profile import Profile
 from core.models.review import Review
-from core.models.ingested_source import IngestedSource
-from api.schemas.profile import ProfileCreate, ProfileUpdate
 
 log = structlog.get_logger()
 
@@ -24,6 +25,7 @@ async def create_profile(
         user_id=user_id,
         github_username=data.github_username,
         portfolio_url=data.portfolio_url,
+        webhook_url=data.webhook_url,
         resume_filename=resume_filename,
         resume_text=resume_text,
     )
@@ -41,9 +43,7 @@ async def get_profile(
     """
     Get a profile by ID, checking ownership.
     """
-    stmt = select(Profile).where(
-        (Profile.id == profile_id) & (Profile.user_id == user_id)
-    )
+    stmt = select(Profile).where((Profile.id == profile_id) & (Profile.user_id == user_id))
     result = await db.execute(stmt)
     return result.scalars().first()
 
@@ -65,6 +65,8 @@ async def update_profile(
         profile.github_username = data.github_username
     if data.portfolio_url is not None:
         profile.portfolio_url = data.portfolio_url
+    if data.webhook_url is not None:
+        profile.webhook_url = data.webhook_url
 
     db.add(profile)
     await db.commit()
